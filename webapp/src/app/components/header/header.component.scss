@@ -1,0 +1,49 @@
+@import "../../../sass/abstract/variables";
+
+.main {
+    display: flex;
+    align-items: center;
+    height: 56px;
+    width: 100vw;
+    background-color: $colorint1;
+}
+
+.header {
+    height: 100%;
+    width: 100%;
+
+
+    &-logo {
+        height: 29px;
+        width: 100%;
+        color: $contentBg;
+        padding: 10px 20px;
+
+        &-text {
+            font-size: 20px;
+        }
+    }
+
+    &-powered {
+        height: 24px;
+        width: 100%;
+        color: $contentBg;
+        padding-left: 20px;
+
+        &-text {
+            font-size: 10px;
+        }
+    }
+}
+
+.logout {
+
+  button {
+    color: $contentBg;
+    font-size: $md-txt;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}

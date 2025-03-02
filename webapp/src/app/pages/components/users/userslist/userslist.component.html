@@ -1,0 +1,92 @@
+<div class="main">
+    <div class="header">
+        <span class="header-text">Users List</span>
+        <div class="space1"></div>
+        <button class="header-btn" (click)="RegisterMultiUsers()">Add Multi Users</button>
+        <div class="space2"></div>
+        <button class="header-btn" (click)="DeleteAllUsers()">Delete All Users</button>
+
+    </div>
+    <div class="table">
+        <div class="table-header">
+            <div class="table-header-col1">
+                <span class="table-header-text">Id</span>
+            </div>
+            <div class="table-header-col2">
+                <span class="table-header-text">User Id</span>
+            </div>
+            <div class="table-header-col3">
+                <span class="table-header-text">User Name</span>
+            </div>
+            <div class="table-header-col4">
+                <span class="table-header-text">User Token</span>
+            </div>
+            <div class="table-header-col5">
+                <span class="table-header-text">Controls</span>
+            </div>
+        </div>
+        <div class="table-data">
+            <div class="table-data-row" *ngFor="let item of UserList">
+                <div class="table-data-col1">
+                    <span class="table-data-text">
+                        <!-- Id -->
+                         {{ item.id }}
+                    </span>
+                </div>
+                <div class="table-data-col2">
+                    <span class="table-data-text">
+                        <!-- User Id -->
+                        {{ item.userId }}
+                    </span>
+                </div>
+                <div class="table-data-col3">
+                    <span class="table-data-text">
+                        <!-- User Name -->
+                        {{ item.userName | slice:0:30}} ...
+                    </span>
+                </div>
+                <div class="table-data-col4">
+                    <span class="table-data-text">
+                        <!-- User Token -->
+                        {{ item.userToken | slice:0:80}} ...
+                    </span>
+                </div>
+                <div class="table-data-col5">
+                    <div 
+                    (click)="ViewProfile(item)"
+                    class="table-data-col5-col">
+                        <mat-icon 
+                        title="View Profile"
+                        class="table-data-col5-col-icon">portrait</mat-icon>
+
+                    </div>
+                    <div 
+                    (click)="UpdateProfile(item)"
+                    class="table-data-col5-col">
+                        <mat-icon 
+                        title="Edit Profile"
+                        class="table-data-col5-col-icon">settings</mat-icon>
+                    </div>
+                    <div 
+                    (click)="DeleteProfile(item)"
+                    class="table-data-col5-col">
+                        <mat-icon 
+                        title="Delete Profile"
+                        class="table-data-col5-col-icon">delete</mat-icon>
+                    </div>
+                   
+                </div>
+            </div>
+        </div>
+        <div class="table-nav">
+            <div 
+            (click)="MoveIndexPrevious()"
+            class="table-nav-col1"><</div>
+            <div class="table-nav-col2">{{ DBLimitsModel.offSetNumber }} - {{ ToNumber }} of {{ DBLimitsModel.totalCount }}</div>
+            <div 
+            (click)="MoveIndexNext()"
+            class="table-nav-col1">></div>
+
+        </div>
+    </div>
+</div>

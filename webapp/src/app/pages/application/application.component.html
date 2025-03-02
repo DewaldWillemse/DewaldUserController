@@ -1,0 +1,21 @@
+<div class="main">
+    <div class="container">
+        <div class="container-col1">
+            <div class="spacer-top"></div>
+            <div class="container-col1-row" *ngFor="let item of MenuDisplay">
+                <button
+                (click)="ChangeView(item)"
+                class="container-col1-btn">
+                    {{item}}
+                </button>
+            </div>
+        </div>
+        <div class="container-col2">
+            <app-pages-components-users-userslist *ngIf="DisplayPage == 'Users'"></app-pages-components-users-userslist>
+            <app-pages-components-users-usersdetails *ngIf="DisplayPage == 'UsersDetails'"></app-pages-components-users-usersdetails>
+            
+
+
+        </div>
+    </div>
+</div>

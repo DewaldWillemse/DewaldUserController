@@ -1,0 +1,143 @@
+<div class="main">
+    <div class="header">
+        <div class="header-logo">
+            <span class="header-logo-text">Payteq Users Controller</span>
+        </div>
+        <div class="header-powered">
+            <span class="header-powered-text">Powered by Johan Botha</span>
+        </div>
+    </div>
+    <div class="login">
+        <div class="login-area">
+            <div class="login-area-box"
+            [ngStyle]="{ 'height': loginBoxHeight + 'px'}">
+                <div class="login-area-box-header">
+                    <span class="login-area-box-header-text">
+                        Welcome Login
+                    </span>
+                </div>
+                <div class="spacer-top"></div>
+
+                <!-- user login control -->
+                <div *ngIf="!RegisterActive">
+                    <div class="login-area-box-row">
+                        <div class="login-area-box-row-col1">
+                            <span class="login-area-box-row-col1-text">
+                                User Name:
+                            </span>
+                        </div>
+                        <div class="login-area-box-row-col2">
+                            <input 
+                            type="text" 
+                            [(ngModel)]="LogonModel.userName"
+                            class="login-area-box-row-col2-input">
+                        </div>
+                    </div>
+                    <div class="login-area-box-row">
+                        <div class="login-area-box-row-col1">
+                            <span class="login-area-box-row-col1-text">
+                                Password:
+                            </span>
+                        </div>
+                        <div class="login-area-box-row-col2">
+                            <input
+                            [(ngModel)]="LogonModel.password"
+                            type="password"
+                            class="login-area-box-row-col2-input">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- user registration control -->
+                <div *ngIf="RegisterActive">
+                    <div class="login-area-box-row">
+                        <div class="login-area-box-row-col1">
+                            <span class="login-area-box-row-col1-text">
+                                Your Name:
+                            </span>
+                        </div>
+                        <div class="login-area-box-row-col2">
+                            <input 
+                            type="text" 
+                            [(ngModel)]="UserModel.usersname"
+                            class="login-area-box-row-col2-input">
+                        </div>
+                    </div>
+                    <div class="login-area-box-row">
+                        <div class="login-area-box-row-col1">
+                            <span class="login-area-box-row-col1-text">
+                                Email Address:
+                            </span>
+                        </div>
+                        <div class="login-area-box-row-col2">
+                            <input
+                            [(ngModel)]="UserModel.emailAddress"
+                            type="text"
+                            class="login-area-box-row-col2-input">
+                        </div>
+                    </div>
+                    <div class="login-area-box-row">
+                        <div class="login-area-box-row-col1">
+                            <span class="login-area-box-row-col1-text">
+                                Contact Number:
+                            </span>
+                        </div>
+                        <div class="login-area-box-row-col2">
+                            <input
+                            [(ngModel)]="UserModel.contactNumber"
+                            type="text"
+                            class="login-area-box-row-col2-input">
+                        </div>
+                    </div>
+                    <div class="login-area-box-row">
+                        <div class="login-area-box-row-col1">
+                            <span class="login-area-box-row-col1-text">
+                                Password:
+                            </span>
+                        </div>
+                        <div class="login-area-box-row-col2">
+                            <input
+                            [(ngModel)]="UserModel.password"
+                            type="password"
+                            class="login-area-box-row-col2-input">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="spacer-mid"></div>
+                <div class="login-area-box-row">
+                    <div *ngIf="!RegisterActive">
+                        <button
+                        (click)="LoginUser()"
+                        class="login-area-box-row-btn">
+                            Login
+                        </button>
+                    </div>
+                    <div *ngIf="RegisterActive">
+                        <button
+                        (click)="RegisterUser()"
+                        class="login-area-box-row-btn">
+                            Register
+                        </button>
+                    </div>
+                </div>
+                <div class="login-area-box-row">
+                    <div *ngIf="!RegisterActive">
+                        <span 
+                        (click)="ActivateRegistering()"
+                        class="login-area-box-row-text">Register</span>                    
+                    </div>
+                    <div *ngIf="RegisterActive">
+                        <span 
+                        (click)="ActivateRegistering()"
+                        class="login-area-box-row-text">Login</span>                    
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+
+
+    </div>
+</div>

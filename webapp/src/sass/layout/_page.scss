@@ -1,0 +1,144 @@
+@import "../../sass/abstract/variables";
+
+.page-main {
+  position: relative;
+  height: 100%;
+  width: 100%;
+
+  .page-header {
+    position: relative;
+    width: 100%;
+    height: 50px;
+    padding: 10px 20px;
+    color: $colorint1;
+    border-bottom: solid $border thin;
+
+    &-text {
+      font-size: $headerFontSize;
+    }
+  }
+
+  .page-controls {
+    position: absolute;
+    top: 50px;
+    left: 0;
+    display: flex;
+    height: 40px;
+    width: 100%;
+    padding: 0 20px;
+    border-bottom: solid $border thin;
+
+    button {
+      display: flex;
+      align-items: center;
+      padding: 0;
+      margin-right: 20px;
+
+      &.btn-link {
+        font-weight: $regular;
+        color: #000000;
+        text-decoration: none;
+
+        &:hover {
+          text-decoration: underline;
+        }
+
+        &:disabled {
+          color: $dark-grey !important;
+        }
+
+        mat-icon {
+          margin-right: 2px;
+
+          &.add { color: $pri-color }
+          &.run { color: $pri-color }
+          &.update { color: $success-color }
+          &.delete { color: $danger-color }
+          &.view { color: $info-color }
+        }
+      }
+    }
+  }
+
+  .page-content {
+    padding: 65px 0 0 20px;
+    height: calc(100% - 50px);
+    width: 100%;
+
+    &.search {
+      padding: 20px 0 0 20px;
+      height: calc(100% - 50px);
+      width: 100%;
+    }
+  }
+
+  label {
+    font-weight: $bold;
+    font-size: $generalFontSize;
+
+    &.attention {
+      color: $subhead-color;
+    }
+  }
+
+  .disabled {
+    opacity: 0.5;
+  }
+
+  input[type=text], input[type=date], input[type=number] {
+    height: 23px;
+    width: 100%;
+    font-size: $generalFontSize;
+    outline: none;
+    border: none;
+    border-bottom: 1px solid $colorint1;
+    padding-left: 5px;
+
+    &:disabled {
+      background-color: #ffffff78;
+    }
+  }
+
+  select {
+    height: 23px;
+    width: 100%;
+    font-size: $generalFontSize;
+    outline: none;
+    border: none;
+    border-bottom: 1px solid $colorint1;
+    padding-left: 2px;
+  }
+
+  select.selectMulti {
+    height: 85px;
+    width: 100%;
+    font-size: $generalFontSize;
+    outline: none;
+    border: none;
+    border-bottom: 1px solid $colorint1;
+    padding-left: 2px;
+
+    option {
+      padding: 4px 2px;
+    }
+  }
+
+  &.add { color: $pri-color }
+
+  .back { color: $info-color }
+  .reset { color: $info-color; }
+  .searchMag { color: $pri-color }
+  .view { color: $info-color }
+  .selectPoint { color: $info-color }
+
+  .authorise { color: $success-color }
+  .refresh { color: $success-color }
+  .save { color: $success-color }
+  &.update { color: $success-color }
+
+  .clear { color: $orange-color }
+
+  &.delete { color: $danger-color }
+}
+
+

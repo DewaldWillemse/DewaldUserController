@@ -1,0 +1,22 @@
+.mat-mdc-menu-panel.tblBtn-menu {
+
+  .mat-mdc-menu-item {
+    min-height: 32px;
+
+    .mat-mdc-menu-item-text {
+      font-size: 12px;
+      font-weight: $regular;
+    }
+
+    mat-icon {
+
+      &.add {
+        color: $pri-color;
+      }
+
+      &.delete {
+        color: $danger-color;
+      }
+    }
+  }
+}

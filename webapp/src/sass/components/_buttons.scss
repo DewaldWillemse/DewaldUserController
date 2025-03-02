@@ -1,0 +1,76 @@
+@import '../abstract/variables';
+
+
+/* ----- ----- ----- btn style ----- ------ ----- */
+
+.btn {
+  display: inline-block;
+  font-weight: 400;
+  color: #212529;
+  text-align: center;
+  vertical-align: middle;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  background-color: transparent;
+  border: 1px solid transparent;
+  padding: .375rem .75rem;
+  font-size: 12px;
+  line-height: 1.5;
+  border-radius: .25rem;
+  transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+
+  &:focus, &.focus {
+    outline: 0;
+    box-shadow: none;
+  }
+
+  &:not(:disabled):not(.disabled) {
+    cursor: pointer;
+  }
+}
+
+/* ----- ----- ----- primary colour buttons ----- ----- ----- */
+
+%primary-hover-active {
+  background-color: $contentBg;
+  border-color: $primary;
+  color: $primary !important;
+}
+
+.btn-primary {
+  background-color: $primary;
+  border-color: $primary;
+  color: $contentBg;
+
+  &:hover {
+    @extend %primary-hover-active;
+  }
+
+  &:not(:disabled):not(.disabled):active {
+    @extend %primary-hover-active;
+  }
+
+  &:disabled {
+    background-color: $dark-grey;
+    border-color: $dark-grey;
+    color: $contentBg !important;
+  }
+}
+
+/* ----- ----- ----- Link buttons ----- ----- ----- */
+
+// .btn-link {
+//   font-weight: $regular;
+//   color: $primary;
+//   text-decoration: none;
+
+//   &:hover {
+//     text-decoration: underline;;
+//   }
+
+//   &:disabled {
+//     color: $dark-grey !important;
+//   }
+// }
