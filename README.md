@@ -3,7 +3,7 @@
 ## Objectives of this project
 Please note the following, this project is the Assessment Test Project for Junior applicants, as you work through this project you will see that most of the working project is here, we remove parts of the application, your objective is to analyze the application and fill in the missing parts.
 
-The database part si not provided because it lives on your dev station, you should be able to analyze the application and design your database accordingly. 
+The database part is not provided because it lives on your dev station, you should be able to analyze the application and design your database accordingly. 
 
 This test will test your skills in the following way:
 1. css/sass Knowledge
@@ -11,7 +11,7 @@ This test will test your skills in the following way:
 3. typescript Knowledge
 4. .net Knowledge
 5. database Knowledge
-6. Degging Knowledge
+6. Debugging Knowledge
 
 # The Process
 1. You will receive a email, the project will be attached, save to your pc, unzip. 
@@ -20,17 +20,17 @@ This test will test your skills in the following way:
 4. Open api restore the nuGet packages, rebuild, once complete Success run application,
 5. Navigate to the api/UserControlApi/Scripts, run the queries in the manager to create the components,
 6. Investigate and Debug the application, find the missing parts and fill in.
-7. Create your own Git Reamme.md in git and promote your work,
+7. Create your own Git Readme.md in git and promote your work,
 8. On Completion send us the git repo link of delivery and inspection,
 9. If you are late you will be disqualified,
 
 
-OOOORRRR 
+# OR 
 
 You may decide to pack this all on and do your own thing but, your scope here will be to learn our way of doing things so we would not recommend that but, we are doing this to measure your skill level.
 
 Following, is examples of the app, ensure that the app looks the same with functionality.<br>
-You will have a week to complete it, from the day you received the mail.<br>
+You will have 4 days to complete it, from the day you received the mail.<br>
 You may use any AI that you need to complete this Assessment Test.<br>
 
 Good Luck!!! And have fun!!!
@@ -126,3 +126,10 @@ You will see that we are creating a AES256 Encrypted JWT, it is a bit lazy as to
 As we know the passphrase is a set byte[32] and the iv is a set byte[16], so how this works, we have a key in our config file "appsettings.json" -> "PrimaryLinkSection", we collect this and all the epoc value to the start, we the for passphrase substring to 32 and for the iv substring to 16, so we only have one entry point for a secret value and the user or a person does not know what is looking at, the epoc value in the db is the dynamic missing part that only internal developers knows about.
 
 Have a look, do some research and enjoy.
+
+# Bonuses
+The candidate will succeed if the application works, to give you the proverbial browny points, get the application to deploy in IIS, better yet if you can Linux in Docker. The Api already has a certificate, we can see this all through the application, tip go have a look at the webapp/assets/services/rest.service.ts we have a isDevelopment key when set to true we can have this ready for development and debugging, if set to false it is ready for IIS, your docker is a bit more complicated or is it? With docker I will suggest to do a .net runtime env, nginx webservice and a Docker MSSQL, keep in mind here that the ConnectionString should then talk to the container name and not the ip address. Just some ideas.
+
+maybe to complicated give it a try.
+
+If you are good with debugging techniques and your are willing to try and not give up this should not be that difficult.
