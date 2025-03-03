@@ -14,8 +14,8 @@ This test will test your skills in the following way:
 6. Debugging Knowledge
 
 # The Process
-1. You will receive a email, the project will be attached, save to your pc, unzip. 
-2. Create a Git Repo and ensure that the unzipped project becomes part of it and push to Repo,
+1. You will receive a email, with a git link. 
+2. Create a Git Repo (your own) and ensure that the project becomes part of it,
 3. Open and Install webapp packages and run application, in browser navigate to given url,
 4. Open api restore the nuGet packages, rebuild, once complete Success run application,
 5. Navigate to the api/UserControlApi/Scripts, run the queries in the manager to create the components,
