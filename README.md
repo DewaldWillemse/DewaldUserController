@@ -121,7 +121,7 @@ The learner will be exposed to and required to learn the following disciplines:
 ![bckendDBService](documents/idbServicesLayout.png)
 
 # User Security
-You will see that we are creating a AES256 Encrypted JWT, it is a bit lazy as to only use the password, cracking the encryption will then also be easier, in this application we are making use of the whole model of the user when registering, so we create a json object and then encrypt, to be a little bit more cheeky, the system uses a sanitized epoc value as the key and iv for the encryption, this epoc also makes up the userId column, you will be we sanitize the userId, extract the epoc value and feed the iv with it.
+You will see that we are creating a AES256 Encrypted JWT, it is a bit lazy as to only use the password, cracking the encryption will then also be easier, in this application we are making use of the whole model of the user when registering, so we create a json object and then encrypt, to be a little bit more cheeky, the system uses a sanitized epoc value as the key and iv for the encryption, this epoc also makes up the userId column, you will see we sanitize the userId, extract the epoc value and feed the iv with it.
 
 As we know the passphrase is a set byte[32] and the iv is a set byte[16], so how this works, we have a key in our config file "appsettings.json" -> "PrimaryLinkSection", we collect this and all the epoc value to the start, we the for passphrase substring to 32 and for the iv substring to 16, so we only have one entry point for a secret value and the user or a person does not know what is looking at, the epoc value in the db is the dynamic missing part that only internal developers knows about.
 
