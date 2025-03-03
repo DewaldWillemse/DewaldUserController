@@ -74,6 +74,15 @@ The learner will be exposed to and required to learn the following disciplines:
 3. Use sass for all of the above,
 4. All input Boxes to be linked with variables,
 
+## Home Page / User Register
+![HomeRegisterPage](documents/homeRegisterPage.png)
+
+### Focus on the following
+1. The login box must always remain in the middle of he page,
+2. Ensure framing is done for final visual objects,
+3. Use sass for all of the above,
+4. All input Boxes to be linked with variables,
+
 ## Application
 ![ApplicationBasePage](documents/applicationHomePage.png)
 ### Focus on the following
