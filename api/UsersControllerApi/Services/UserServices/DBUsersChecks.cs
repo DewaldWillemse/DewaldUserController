@@ -1,19 +1,24 @@
-﻿using BaseProjectApi.Models;
+﻿using MySql.Data.MySqlClient;  // Ensure this is used for MySQL connection
+using BaseProjectApi.Models;
 using BaseProjectApi.Services.ManualServices;
+using System;
+using System.Threading.Tasks;
 
 namespace BaseProjectApi.Services.UserService
 {
     public class DBUsersChecks : IDBUsersChecks
     {
-        private ServiceModel _result;
         private readonly IDBManualService _dbms;
-        private string _sql;
+        private ServiceModel _result;
+        private string? _sql;
+
         public DBUsersChecks(IDBManualService dbms)
         {
-            _result = new ServiceModel();
             _dbms = dbms;
+            _result = new ServiceModel();
         }
 
+        // Check if a UserId exists in the database
         public async Task<ServiceModel> CheckIfUserIdExist(string userId)
         {
             try
@@ -26,30 +31,30 @@ namespace BaseProjectApi.Services.UserService
                 {
                     _result.Code = 500;
                     _result.Status = false;
-                    _result.Message = $"CheckIfUserIdExist() UserId: {userId} already exist in the table, please check it we can't have a duplicate.";
+                    _result.Message = $"UserId '{userId}' already exists.";
                     _result.Payload = null;
-                    return _result;
+                }
+                else
+                {
+                    _result.Code = 200;
+                    _result.Status = true;
+                    _result.Message = $"UserId '{userId}' does not exist.";
+                    _result.Payload = null;
                 }
 
                 readerObj.Close();
-
-                _result.Code = 200;
-                _result.Status = true;
-                _result.Message = $"CheckIfUserIdExist() UserId: {userId} does not exist in the table - Proceed1";
-                _result.Payload = null;
-
             }
             catch (Exception ex)
             {
                 _result.Code = 500;
                 _result.Status = false;
-                _result.Message = "AddNewShiptoDatabase() Exception: " + ex.Message;
-
+                _result.Message = "CheckIfUserIdExist() Exception: " + ex.Message;
             }
 
             return _result;
         }
 
+        // Check if a UserName exists in the database
         public async Task<ServiceModel> CheckIfUserNameExist(string UserName)
         {
             try
@@ -62,112 +67,97 @@ namespace BaseProjectApi.Services.UserService
                 {
                     _result.Code = 500;
                     _result.Status = false;
-                    _result.Message = $"CheckIfUserNameExist() UserName: {UserName} already exist in the table, please check it we can't have a duplicate.";
+                    _result.Message = $"UserName '{UserName}' already exists.";
                     _result.Payload = null;
-                    return _result;
+                }
+                else
+                {
+                    _result.Code = 200;
+                    _result.Status = true;
+                    _result.Message = $"UserName '{UserName}' does not exist.";
+                    _result.Payload = null;
                 }
 
                 readerObj.Close();
-
-                _result.Code = 200;
-                _result.Status = true;
-                _result.Message = $"CheckIfUserNameExist() UserName: {UserName} does not exist in the table - Proceed2";
-                _result.Payload = null;
-
             }
             catch (Exception ex)
             {
                 _result.Code = 500;
                 _result.Status = false;
                 _result.Message = "CheckIfUserNameExist() Exception: " + ex.Message;
-
             }
 
             return _result;
         }
 
+        // Check if the username is duplicated during an update operation
         public async Task<ServiceModel> CheckUsernameOnUpdateDuplicate(UsersModel usrm)
         {
             try
             {
-                _sql = $"SELECT * FROM users";
+                _sql = $"SELECT * FROM users WHERE UserName = '{usrm.UserName}' AND UserId != '{usrm.UserId}'";
                 var checkRes = await _dbms.SqlFecthCommand(_sql);
 
                 var readerObj = checkRes.Payload;
                 if (readerObj.HasRows)
                 {
-                    while (await readerObj.ReadAsync())
-                    {
-                        var id = readerObj.GetInt32(readerObj.GetOrdinal("id"));
-                        var userId = readerObj.GetString(readerObj.GetOrdinal("UserId"));
-                        var userName = readerObj.GetString(readerObj.GetOrdinal("UserName"));
-
-                        if (id != usrm.id)
-                        {
-                            continue;
-                        }
-
-                        if (userName == usrm.UserName )
-                        {
-                            _result.Code = 500;
-                            _result.Status = false;
-                            _result.Message = $"CheckUsernameOnUpdateDuplicate() UserName: {usrm.UserName} already exist in the table, please check it we can't have a duplicate.";
-                            _result.Payload = null;
-                            return _result;
-                        }
-                    }                    
+                    _result.Code = 500;
+                    _result.Status = false;
+                    _result.Message = $"UserName '{usrm.UserName}' is already taken by another user.";
+                    _result.Payload = null;
+                }
+                else
+                {
+                    _result.Code = 200;
+                    _result.Status = true;
+                    _result.Message = $"UserName '{usrm.UserName}' is available for update.";
+                    _result.Payload = null;
                 }
 
                 readerObj.Close();
-
-                _result.Code = 200;
-                _result.Status = true;
-                _result.Message = $"CheckUsernameOnUpdateDuplicate() UserName: {usrm.UserName} does not exist in the table - Proceed";
-                _result.Payload = null;
-
             }
             catch (Exception ex)
             {
                 _result.Code = 500;
                 _result.Status = false;
                 _result.Message = "CheckUsernameOnUpdateDuplicate() Exception: " + ex.Message;
-
             }
 
             return _result;
         }
 
+        // Get the total number of users in the database
         public async Task<ServiceModel> GetUserTotalCount()
         {
             try
             {
-                _sql = $"SELECT COUNT(*) AS theCount FROM users";
+                _sql = "SELECT COUNT(*) FROM users"; // Query to get total user count
                 var checkRes = await _dbms.SqlFecthCommand(_sql);
 
                 var readerObj = checkRes.Payload;
+                int totalCount = 0;
+
                 if (readerObj.HasRows)
                 {
                     await readerObj.ReadAsync();
-                    _result.Payload = readerObj.GetInt32(readerObj.GetOrdinal("theCount"));
+                    totalCount = readerObj.GetInt32(0); // Get the count from the query result
                 }
-
-                readerObj.Close();
 
                 _result.Code = 200;
                 _result.Status = true;
-                _result.Message = $"GetUserTotalCount() Success";
+                _result.Message = "Total user count fetched successfully.";
+                _result.Payload = totalCount;
 
+                readerObj.Close();
             }
             catch (Exception ex)
             {
                 _result.Code = 500;
                 _result.Status = false;
                 _result.Message = "GetUserTotalCount() Exception: " + ex.Message;
-
             }
 
             return _result;
         }
-
     }
 }

@@ -32,14 +32,14 @@ namespace BaseProjectApi.Services.UserServices
 
 
         }
-        public async Task<ServiceModel> RegisterUser(RequestModel uireq)
+        public async Task<ServiceModel> RegisterUser(RequestModel request)
         {
             _result = new ServiceModel();
 
             try
             {
                 var enc_result = new ServiceModel();
-                var payload = JsonConvert.DeserializeObject<UsersProfile>(uireq.Payload.ToString());
+                var payload = JsonConvert.DeserializeObject<UsersProfile>(request.Payload.ToString());
 
                 enc_result = await _enc.EncryptToken(payload!);
                 if (!enc_result.Status) return enc_result;
@@ -66,14 +66,14 @@ namespace BaseProjectApi.Services.UserServices
             return _result;
         }
 
-        public async Task<ServiceModel> UserLogin(RequestModel uireq)
+        public async Task<ServiceModel> UserLogin(RequestModel request)
         {
             var UserData = new ServiceModel();
             _result = new ServiceModel();
 
             try
             {
-                var getdata = JsonConvert.DeserializeObject<UserLoginModel>(uireq.Payload.ToString()!)!;
+                var getdata = JsonConvert.DeserializeObject<UserLoginModel>(request.Payload.ToString()!)!;
                 UserData = await _dbu.UserLogin(getdata.UserName);
 
                 if (UserData.Payload == null)
@@ -92,7 +92,7 @@ namespace BaseProjectApi.Services.UserServices
                 if (!decryption.Status) return decryption;
 
                 var usrProfile = JsonConvert.DeserializeObject<UsersProfile>(decryption.Payload.ToString()!);
-                var loginDetails = JsonConvert.DeserializeObject<UserLoginModel>(uireq.Payload.ToString());
+                var loginDetails = JsonConvert.DeserializeObject<UserLoginModel>(request.Payload.ToString());
 
                 if (!usrProfile.Password.Equals(loginDetails.Password))
                 {
@@ -127,14 +127,14 @@ namespace BaseProjectApi.Services.UserServices
             return _result;
         }
 
-        public async Task<ServiceModel> GetSingleUser(RequestModel uireq)
+        public async Task<ServiceModel> GetSingleUser(RequestModel request)
         {
             var UserData = new ServiceModel();
             _result = new ServiceModel();
 
             try
             {
-                var getdata = JsonConvert.DeserializeObject<UserLoginModel>(uireq.Payload.ToString()!)!;
+                var getdata = JsonConvert.DeserializeObject<UserLoginModel>(request.Payload.ToString()!)!;
                 UserData = await _dbu.UserLogin(getdata.UserName);
 
                 if (UserData.Payload == null)
@@ -153,7 +153,7 @@ namespace BaseProjectApi.Services.UserServices
                 if (!decryption.Status) return decryption;
 
                 var usrProfile = JsonConvert.DeserializeObject<UsersProfile>(decryption.Payload.ToString()!);
-                var loginDetails = JsonConvert.DeserializeObject<UserLoginModel>(uireq.Payload.ToString());
+                var loginDetails = JsonConvert.DeserializeObject<UserLoginModel>(request.Payload.ToString());
 
                 if (!usrProfile.Password.Equals(loginDetails.Password))
                 {
@@ -188,35 +188,34 @@ namespace BaseProjectApi.Services.UserServices
             return _result;
         }
 
-        public async Task<ServiceModel> GetAllUsers(RequestModel uireq)
-        {
-            var UserData = new ServiceModel();
-            _result = new ServiceModel();
+        public async Task<ServiceModel> GetAllUsers(RequestModel request)
+{
+    var Payload = JsonConvert.DeserializeObject<SelectionFilterModel>(request.Payload.ToString()!)!;  // Deserialize to SelectionFilterModel
+    _result = new ServiceModel();
 
-            try
-            {
-                var Payload = JsonConvert.DeserializeObject<SelectionFilterModel>(uireq.Payload.ToString()!)!;
-                _result = await _dbu.GetAllUsers(Payload);
+    try
+    {
+        _result = await _dbu.GetAllUsers(Payload);  // Pass the SelectionFilterModel to DB service
+    }
+    catch (Exception ex)
+    {
+        _result.Status = false;
+        _result.Code = 500;
+        _result.Message = $"GetAllUsers(): Exception: {ex}";
+    }
 
-            }
-            catch (Exception ex)
-            {
-                _result.Status = false;
-                _result.Code = 500;
-                _result.Message = $"LoginUser(): Exception: {ex}";
-            }
+    return _result;
+}
 
-            return _result;
-        }
 
-        public async Task<ServiceModel> UpdateUser(RequestModel uireq)
+        public async Task<ServiceModel> UpdateUser(RequestModel request)
         {
             _result = new ServiceModel();
 
             try
             {
                 var enc_result = new ServiceModel();
-                var payload = JsonConvert.DeserializeObject<UsersProfile>(uireq.Payload.ToString());
+                var payload = JsonConvert.DeserializeObject<UsersProfile>(request.Payload.ToString());
 
                 enc_result = await _enc.EncryptToken(payload!);
                 if (!enc_result.Status) return enc_result;
@@ -241,16 +240,13 @@ namespace BaseProjectApi.Services.UserServices
 
             return _result;
         }
-        public async Task<ServiceModel> DeleteSingleUser(RequestModel uireq)
+       public async Task<ServiceModel> DeleteSingleUser(RequestModel request)
         {
-            var UserData = new ServiceModel();
             _result = new ServiceModel();
-
             try
             {
-                var Payload = JsonConvert.DeserializeObject<UsersModel>(uireq.Payload.ToString()!)!;
-                _result = await _dbu.DeleteSingleUser(Payload.UserId);
-
+                var userId = request.Payload.ToString(); // Ensure you get the correct userId or object from the request
+                _result = await _dbu.DeleteSingleUser(userId); // Pass userId to the method
             }
             catch (Exception ex)
             {
@@ -258,11 +254,10 @@ namespace BaseProjectApi.Services.UserServices
                 _result.Code = 500;
                 _result.Message = $"DeleteSingleUser(): Exception: {ex}";
             }
-
             return _result;
         }
 
-        public async Task<ServiceModel> DeleteAllUsers(RequestModel uireq)
+        public async Task<ServiceModel> DeleteAllUsers(RequestModel request)
         {
             _result = new ServiceModel();
 
@@ -281,14 +276,14 @@ namespace BaseProjectApi.Services.UserServices
             return _result;
         }
 
-        public async Task<ServiceModel> DecryptUserToken(RequestModel uireq)
+        public async Task<ServiceModel> DecryptUserToken(RequestModel request)
         {
             var UserData = new ServiceModel();
             _result = new ServiceModel();
 
             try
             {
-                var Payload = JsonConvert.DeserializeObject<UsersModel>(uireq.Payload.ToString()!)!;
+                var Payload = JsonConvert.DeserializeObject<UsersModel>(request.Payload.ToString()!)!;
 
                 var enc_result = new ServiceModel();
 

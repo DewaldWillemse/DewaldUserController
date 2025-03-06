@@ -60,6 +60,9 @@
         public int LimitedNumber { get; set; }
         public string FilterSearchName { get; set; }
         public int TotalCount { get; set; }
+        public string UserName { get; set; }   // Filter for UserName
+        public int PageSize { get; set; }      // Pagination: number of records per page
+         public int PageNumber { get; set; }    // Pagination: current page number
 
 
     }

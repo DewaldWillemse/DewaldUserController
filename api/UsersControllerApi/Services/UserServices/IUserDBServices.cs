@@ -5,11 +5,12 @@ namespace BaseProjectApi.Services.UserServices
     public interface IUserDBServices
     {
         Task<ServiceModel> RegisterUser(UsersModel usrm, UsersProfile usrp);
-        Task<ServiceModel> UserLogin(bool UserName);
+        Task<ServiceModel> UserLogin(string UserName);
         Task<ServiceModel> GetSingleUser(string UserId);
-        Task<ServiceModel> GetAllUsers();
+        Task<ServiceModel> GetAllUsers(SelectionFilterModel filter);
         Task<ServiceModel> UpdateUser(UsersModel usrm);
-        Task<ServiceModel> DeleteSingleUser();
+        Task<ServiceModel> DeleteSingleUser(string userId);
         Task<ServiceModel> DeleteAllUsers();
+        Task<ServiceModel> CheckIfUserNameExist(UsersModel usrm);
     }
 }

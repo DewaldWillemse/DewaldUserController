@@ -1,351 +1,329 @@
-﻿using BaseProjectApi.Models;
-using BaseProjectApi.Services.UserService;
+﻿using MySql.Data.MySqlClient;  // MySQL Client for database connection
+using BaseProjectApi.Models;
+using BaseProjectApi.Services.ManualServices;
 using System;
-using System.Data;
-using System.Data.SqlClient;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 
 namespace BaseProjectApi.Services.UserServices
 {
     public class UserDBServices : IUserDBServices
     {
-        public ServiceModel _result;
-        private readonly IConfiguration _configuration;
-        private readonly string _connectionString;
-        private readonly IDBUsersChecks _dbuc;
+        private readonly string? _connectionString;
+        private readonly IDBManualService _dbms;
+        private ServiceModel _result;
+        private string? _sql;
 
-        public UserDBServices(IConfiguration configuration,
-            IDBUsersChecks dbuc)
+        public UserDBServices(IConfiguration configuration, IDBManualService dbms)
         {
-            _configuration = configuration;
+            _connectionString = configuration.GetValue<string>("ConnectionStrings:DefaultConnection");
+            _dbms = dbms;
             _result = new ServiceModel();
-            _connectionString = _configuration.GetValue<string>("ConnectionStrings:DefaultConnection");
-            _dbuc = dbuc;
+        }
+    // Update user details
+public async Task<ServiceModel> UpdateUser(UsersModel usrm)
+{
+    _result = new ServiceModel();
+
+    try
+    {
+        if (usrm == null || string.IsNullOrEmpty(usrm.UserId))
+        {
+            _result.Code = 400;
+            _result.Status = false;
+            _result.Message = "Invalid user data. UserId cannot be null.";
+            return _result;
         }
 
-        public async Task<ServiceModel> RegisterUser(UsersModel usrm, UsersProfile usrp)
-        {
-            _result = new ServiceModel();
+        // SQL query to update user details
+        _sql = "UPDATE users SET UserName = @UserName WHERE UserId = @UserId";
 
+        // Execute query using parameterized SQL
+        var checkRes = await _dbms.SqlFecthCommand(_sql, new MySqlParameter[] {
+            new MySqlParameter("@UserName", usrm.UserName),
+            new MySqlParameter("@UserId", usrm.UserId)
+        });
+
+        if (checkRes.Code == 200)
+        {
+            _result.Code = 200;
+            _result.Status = true;
+            _result.Message = "User successfully updated.";
+        }
+        else
+        {
+            _result.Code = 500;
+            _result.Status = false;
+            _result.Message = "Error updating user.";
+        }
+    }
+    catch (Exception ex)
+    {
+        _result.Code = 500;
+        _result.Status = false;
+        _result.Message = "UpdateUser() Exception: " + ex.Message;
+    }
+
+    return _result;
+}
+
+        // Check if the UserName exists
+        public async Task<ServiceModel> CheckIfUserNameExist(UsersModel usrm)
+        {
             try
             {
-                /* These are small little checks this may be done in raw query */
-                _result = await _dbuc.CheckIfUserIdExist(usrm.UserId);
-                if (!_result.Status) return _result;
-                _result = await _dbuc.CheckIfUserNameExist(usrm.UserName);
-                if (!_result.Status) return _result;
-
-                /* The rest stored procedures here we are submitting data */
-                using (SqlConnection connection = new SqlConnection(_connectionString))
+                _sql = "SELECT * FROM users WHERE UserName = @UserName";
+                var checkRes = await _dbms.SqlFecthCommand(_sql, new MySqlParameter("@UserName", usrm.UserName));
+                var readerObj = checkRes.Payload;
+                if (readerObj.HasRows)
                 {
-                    using (SqlCommand command = new SqlCommand("dbo.InsertUser", connection))
-                    {
-                        command.CommandType = CommandType.StoredProcedure;
-                        
-                        // Open connection and execute command
-                        connection.Open();
-                        command.ExecuteNonQuery();
-                    }
+                    _result.Code = 500;
+                    _result.Status = false;
+                    _result.Message = $"UserName '{usrm.UserName}' already exists.";
+                    _result.Payload = null;
                 }
-
-                _result.Code = 200;
-                _result.Status = true;
-                _result.Message = "RegisterUser() User Registered";
-
+                else
+                {
+                    _result.Code = 200;
+                    _result.Status = true;
+                    _result.Message = $"UserName '{usrm.UserName}' does not exist.";
+                    _result.Payload = null;
+                }
+                readerObj.Close();
             }
             catch (Exception ex)
             {
+                _result.Code = 500;
+                _result.Status = false;
+                _result.Message = "CheckIfUserNameExist() Exception: " + ex.Message;
+            }
+            return _result;
+        }
 
+        // Register a new user
+        public async Task<ServiceModel> RegisterUser(UsersModel usrm, UsersProfile usrp)
+        {
+            try
+            {
+                _result = await _dbms.CheckIfUserIdExist(usrm.UserId);
+                if (!_result.Status) return _result;
+
+                _result = await _dbms.CheckIfUserNameExist(usrm.UserName);
+                if (!_result.Status) return _result;
+
+                _sql = "INSERT INTO users (UserId, UserName, DateTouched) VALUES (@UserId, @UserName, NOW())";
+                var checkRes = await _dbms.SqlFecthCommand(_sql, 
+                    new MySqlParameter("@UserId", usrm.UserId),
+                    new MySqlParameter("@UserName", usrm.UserName));
+
+                if (checkRes.Code == 200)
+                {
+                    _result.Code = 200;
+                    _result.Status = true;
+                    _result.Message = "User successfully registered.";
+                }
+                else
+                {
+                    _result.Code = 500;
+                    _result.Status = false;
+                    _result.Message = "Error registering user.";
+                }
+            }
+            catch (Exception ex)
+            {
+                _result.Code = 500;
+                _result.Status = false;
+                _result.Message = "RegisterUser() Exception: " + ex.Message;
+            }
+            return _result;
+        }
+
+        // User login based on username
+        public async Task<ServiceModel> UserLogin(string UserName)
+        {
+            try
+            {
+                _sql = "SELECT * FROM users WHERE UserName = @UserName";
+                var checkRes = await _dbms.SqlFecthCommand(_sql, new MySqlParameter("@UserName", UserName));
+                var readerObj = checkRes.Payload;
+                if (readerObj.HasRows)
+                {
+                    _result.Code = 200;
+                    _result.Status = true;
+                    _result.Message = "User found!";
+                }
+                else
+                {
+                    _result.Code = 404;
+                    _result.Status = false;
+                    _result.Message = "User not found!";
+                }
+                readerObj.Close();
+            }
+            catch (Exception ex)
+            {
                 _result.Code = 500;
                 _result.Status = false;
                 _result.Message = "UserLogin() Exception: " + ex.Message;
             }
-
             return _result;
         }
 
-        public async Task<ServiceModel> UserLogin(string UserName)
-        {
-            _result = new ServiceModel();
-
-            try
-            {
-                using (SqlConnection connection = new SqlConnection(_connectionString))
-                {
-                    using (SqlCommand command = new SqlCommand("dbo.GetUserByUserName", connection))
-                    {
-                        command.CommandType = CommandType.StoredProcedure;
-                        command.Parameters.AddWithValue("@UserName", UserName); // Ensure this matches the stored procedure parameter
-
-                        await connection.OpenAsync();
-                        using (SqlDataReader reader = await command.ExecuteReaderAsync())
-                        {
-                            while (await reader.ReadAsync())
-                            {
-                                var UserModelx = new UsersModel
-                                {
-                                    id = reader.GetInt32(reader.GetOrdinal("id")), // Adjust this if necessary
-                                    UserId = reader.GetString(reader.GetOrdinal("UserId")), // Adjust this if necessary
-                                    UserName = reader.GetString(reader.GetOrdinal("UserName")),
-                                    DateTouched = reader.GetDateTime(reader.GetOrdinal("DateTime"))
-                                };
-
-                                _result.Payload = UserModelx;
-                            }
-
-                            reader.Close();
-                        }
-
-                        command.Clone();
-                    }
-                }
-
-                _result.Code = 200;
-                _result.Status = true;
-                _result.Message = "User retrieved successfully"; // Adjust message as needed
-
-            }
-            catch (Exception ex)
-            {
-                _result.Code = 500;
-                _result.Status = false;
-                _result.Message = "Exception occurred: " + ex.Message;
-            }
-
-            return _result;
-        }
-
+        // Get a single user by UserId
         public async Task<ServiceModel> GetSingleUser(string UserId)
         {
-            _result = new ServiceModel();
-
             try
             {
-                using (SqlConnection connection = new SqlConnection(_connectionString))
+                _sql = "SELECT * FROM users WHERE UserId = @UserId";
+                var checkRes = await _dbms.SqlFecthCommand(_sql, new MySqlParameter("@UserId", UserId));
+                var readerObj = checkRes.Payload;
+                if (readerObj.HasRows)
                 {
-                    using (SqlCommand command = new SqlCommand("dbo.GetSomeOtherSPHereIFyoucan", connection))
+                    _result.Code = 200;
+                    _result.Status = true;
+                    _result.Message = "User found!";
+                    while (await readerObj.ReadAsync())
                     {
-                        command.CommandType = CommandType.StoredProcedure;
-                        command.Parameters.AddWithValue("@UserId", UserId); // Ensure this matches the stored procedure parameter
-
-                        await connection.OpenAsync();
-                        using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                        var user = new UsersModel
                         {
-                            while (await reader.ReadAsync())
-                            {
-                                var UserModelx = new UsersModel
-                                {
-                                    id = reader.GetInt32(reader.GetOrdinal("id")), // Adjust this if necessary
-                                    UserId = reader.GetString(reader.GetOrdinal("UserId")), // Adjust this if necessary
-                                    UserName = reader.GetString(reader.GetOrdinal("UserName")),
-                                    Epoc = reader.GetString(reader.GetOrdinal("Epoc")),
-                                    DateTouched = reader.GetDateTime(reader.GetOrdinal("DateTime"))
-                                };
-
-                                _result.Payload = UserModelx;
-                            }
-
-                            reader.Close();
-                        }
-
-                        connection.Close();
+                            UserId = readerObj.GetString(readerObj.GetOrdinal("UserId")),
+                            UserName = readerObj.GetString(readerObj.GetOrdinal("UserName")),
+                            DateTouched = readerObj.GetDateTime(readerObj.GetOrdinal("DateTouched"))
+                        };
+                        _result.Payload = user;
                     }
                 }
-
-                _result.Code = 200;
-                _result.Status = true;
-                _result.Message = "GetSingleUser() User retrieved successfully"; // Adjust message as needed
-
+                else
+                {
+                    _result.Code = 404;
+                    _result.Status = false;
+                    _result.Message = "User not found!";
+                }
+                readerObj.Close();
             }
             catch (Exception ex)
             {
                 _result.Code = 500;
                 _result.Status = false;
-                _result.Message = "Exception occurred: " + ex.Message;
+                _result.Message = "GetSingleUser() Exception: " + ex.Message;
             }
-
             return _result;
         }
 
-        public async Task<ServiceModel> GetAllUsers(SelectionFilterModel payload)
+        // Get all users using a SelectionFilterModel
+        public async Task<ServiceModel> GetAllUsers(SelectionFilterModel filter)
         {
             _result = new ServiceModel();
-
             try
             {
-                /* Here we are reading from the DB via SP and returning a list 
-                 * Parsing a model of off-set values to we are returning result 0-100                 
-                 */
-                var UserList = new List<UsersModel>();
+                _sql = "SELECT * FROM users WHERE UserName LIKE @UserName LIMIT @PageSize OFFSET @Offset";
+                var checkRes = await _dbms.SqlFecthCommand(_sql, 
+                    new MySqlParameter("@UserName", "%" + filter.UserName + "%"),
+                    new MySqlParameter("@PageSize", filter.PageSize),
+                    new MySqlParameter("@Offset", (filter.PageNumber - 1) * filter.PageSize)
+                );
 
-                using (SqlConnection connection = new SqlConnection(_connectionString))
+                var readerObj = checkRes.Payload;
+                var userList = new List<UsersModel>();
+                while (await readerObj.ReadAsync())
                 {
-                    using (SqlCommand command = new SqlCommand("dbo.__GetAllUsers", connection))
+                    userList.Add(new UsersModel
                     {
-                        command.CommandType = CommandType.StoredProcedure;
-                        command.Parameters.AddWithValue("@Offset", payload.OffSetNumber);
-                        command.Parameters.AddWithValue("@FetchRows", payload.LimitedNumber);
-
-                        using (SqlDataReader reader = await command.ExecuteReaderAsync())
-                        {
-                            while (await reader.ReadAsync())
-                            {
-                                var user = new UsersModel
-                                {
-                                    id = reader.GetInt32(reader.GetOrdinal("id")), // Adjust this if necessary
-                                    UserId = reader.GetString(reader.GetOrdinal("UserId")), // Adjust this if necessary
-                                    UserToken = reader.GetString(reader.GetOrdinal("UserToken")),
-                                    //Epoc = reader.GetString(reader.GetOrdinal("Epoc")),
-                                    DateTouched = reader.GetDateTime(reader.GetOrdinal("DateTime"))
-                                };
-                                UserList.Add(user);
-                            }
-                            reader.Close();
-                        }
-                    }
+                        UserId = readerObj.GetString(readerObj.GetOrdinal("UserId")),
+                        UserName = readerObj.GetString(readerObj.GetOrdinal("UserName")),
+                        DateTouched = readerObj.GetDateTime(readerObj.GetOrdinal("DateTouched"))
+                    });
                 }
+                readerObj.Close();
 
-                /* These are small little checks this may be done in raw query */
-                _result = await _dbuc.GetUserTotalCount();
-                if (!_result.Status) return _result;
-
-                _result.Code = 200;
-                _result.Status = true;
-                _result.Message = _result.Payload.ToString()!;
-                _result.Payload = UserList;
+                if (userList.Count > 0)
+                {
+                    _result.Code = 200;
+                    _result.Status = true;
+                    _result.Message = "Users retrieved successfully.";
+                    _result.Payload = userList;
+                }
+                else
+                {
+                    _result.Code = 404;
+                    _result.Status = false;
+                    _result.Message = "No users found!";
+                }
             }
             catch (Exception ex)
             {
-
                 _result.Code = 500;
                 _result.Status = false;
                 _result.Message = "GetAllUsers() Exception: " + ex.Message;
             }
-
             return _result;
         }
 
-        public async Task<ServiceModel> UpdateUser(UsersModel usrm)
+        // Delete a single user by userId
+        public async Task<ServiceModel> DeleteSingleUser(string userId)
         {
             _result = new ServiceModel();
-
             try
             {
-                /* These are small little checks this may be done in raw query */
-                _result = await _dbuc.CheckUsernameOnUpdateDuplicate(usrm);
-                if (!_result.Status) return _result;
-
-                /* The rest stored procedures here we are submitting data */
-                using (SqlConnection connection = new SqlConnection(_connectionString))
+                if (string.IsNullOrEmpty(userId))
                 {
-                    using (SqlCommand command = new SqlCommand("dbo.UpdateUserByUserId", connection))
-                    {
-                        command.CommandType = CommandType.StoredProcedure;
-
-                        // Add parameters
-                        command.Parameters.AddWithValue("@UserId", usrm.UserId);
-                        command.Parameters.AddWithValue("@UserName", usrm.UserName);
-                        command.Parameters.AddWithValue("@UserToken", usrm.UserToken);
-                        command.Parameters.AddWithValue("@Epoc", usrm.Epoc);
-
-                        // Open connection and execute command
-                        connection.Open();
-                        command.ExecuteNonQuery();
-
-                    }
-
-                    connection.Close();
+                    _result.Code = 400;
+                    _result.Status = false;
+                    _result.Message = "Invalid user ID.";
+                    return _result;
                 }
+                _sql = "DELETE FROM users WHERE UserId = @UserId";
+                var checkRes = await _dbms.SqlCommand(_sql, new MySqlParameter("@UserId", userId));
 
-                _result.Code = 200;
-                _result.Status = true;
-                _result.Message = "UpdateUser() User Updated";
-
+                if (checkRes.Code == 200)
+                {
+                    _result.Code = 200;
+                    _result.Status = true;
+                    _result.Message = "User successfully deleted.";
+                }
+                else
+                {
+                    _result.Code = 500;
+                    _result.Status = false;
+                    _result.Message = "Error deleting user.";
+                }
             }
             catch (Exception ex)
             {
-
-                _result.Code = 500;
-                _result.Status = false;
-                _result.Message = "UpdateUser() Exception: " + ex.Message;
-            }
-
-            return _result;
-        }
-
-        public async Task<ServiceModel> DeleteSingleUser(string UserId)
-        {
-            _result = new ServiceModel();
-
-            try
-            {
-                /* The rest stored procedures here we are submitting data */
-                using (SqlConnection connection = new SqlConnection(_connectionString))
-                {
-                    using (SqlCommand command = new SqlCommand("dbo.DeleteUserByUsername", connection))
-                    {
-                        command.CommandType = CommandType.StoredProcedure;
-
-                        // Add parameters
-                        command.Parameters.AddWithValue("@UserId", UserId);
-
-                        // Open connection and execute command
-                        connection.Open();
-                        command.ExecuteNonQuery();
-                    }
-                    connection.Close();
-                }
-
-                _result.Code = 200;
-                _result.Status = true;
-                _result.Message = "DeleteSingleUser() User Registered";
-
-            }
-            catch (Exception ex)
-            {
-
                 _result.Code = 500;
                 _result.Status = false;
                 _result.Message = "DeleteSingleUser() Exception: " + ex.Message;
             }
-
             return _result;
         }
 
+        // Delete all users
         public async Task<ServiceModel> DeleteAllUsers()
         {
-            _result = new ServiceModel();
-
             try
             {
-                /* The rest stored procedures here we are submitting data */
-                using (SqlConnection connection = new SqlConnection(_connectionString))
+                _sql = "DELETE FROM users";
+                var checkRes = await _dbms.SqlFecthCommand(_sql);
+                if (checkRes.Code == 200)
                 {
-                    using (SqlCommand command = new SqlCommand("dbo.LetsSeeif you canDelete?", connection))
-                    {
-                        command.CommandType = CommandType.StoredProcedure;
-
-                        // Open connection and execute command
-                        connection.Open();
-                        command.ExecuteNonQuery();
-                    }
-
-                    connection.Close();
-
+                    _result.Code = 200;
+                    _result.Status = true;
+                    _result.Message = "All users successfully deleted.";
                 }
-
-                _result.Code = 200;
-                _result.Status = true;
-                _result.Message = "DeleteAllUsers() All Users Deleted";
-
+                else
+                {
+                    _result.Code = 500;
+                    _result.Status = false;
+                    _result.Message = "Error deleting all users.";
+                }
             }
             catch (Exception ex)
             {
-
                 _result.Code = 500;
                 _result.Status = false;
                 _result.Message = "DeleteAllUsers() Exception: " + ex.Message;
             }
-
             return _result;
         }
     }

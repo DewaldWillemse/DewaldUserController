@@ -56,7 +56,7 @@ export class AppPagesHomeComponent {
   }
 
   async LoginUser() {
-
+    console.log("Login clicked");
     this.apc.target = "UsersControl";
     this.apc.payload.action = "UserLogin";
     this.apc.payload.payload = this.LogonModel;

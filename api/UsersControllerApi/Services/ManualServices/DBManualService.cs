@@ -1,95 +1,199 @@
-﻿using BaseProjectApi.Models;
+﻿using MySql.Data.MySqlClient;
+using BaseProjectApi.Models;
+using System;
 using System.Data;
-using System.Data.SqlClient;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 
 namespace BaseProjectApi.Services.ManualServices
 {
     public class DBManualService : IDBManualService
     {
-        public ServiceModel _result;
-        public DBServiceModel<SqlDataReader> _dbresult;
-        private readonly IConfiguration _configuration;
         private readonly string _connectionString;
+        private ServiceModel _result;
+        private string _sql;
 
         public DBManualService(IConfiguration configuration)
         {
-            _configuration = configuration;
+            _connectionString = configuration.GetValue<string>("ConnectionStrings:DefaultConnection");
             _result = new ServiceModel();
-            _dbresult = new DBServiceModel<SqlDataReader>();
-            _connectionString = _configuration.GetValue<string>("ConnectionStrings:DefaultConnection");
-        }            
+        }
 
-        public Task<ServiceModel> SqlCommand(string sql)
+        public async Task<ServiceModel> SqlCommand(string sql)
         {
             try
             {
-                using (SqlConnection connection = new SqlConnection(_connectionString))
+                using (MySqlConnection connection = new MySqlConnection(_connectionString))
                 {
-                    using (SqlCommand command = new SqlCommand(sql, connection))
+                    using (MySqlCommand command = new MySqlCommand(sql, connection))
                     {
                         connection.Open();
-                        command.ExecuteReader();
-
+                        command.ExecuteNonQuery();
                         _result.Code = 200;
                         _result.Status = true;
                         _result.Message = "SqlCommand() Completed Success";
                     }
-
                     connection.Close();
                 }
-
             }
             catch (Exception ex)
             {
                 _result.Code = 500;
                 _result.Status = false;
-                _result.Message = "AddNewShiptoDatabase() Exception: " + ex.Message;
-
+                _result.Message = "SqlCommand() Exception: " + ex.Message;
             }
-
-
-            return Task.FromResult(_result);
+            return _result;
         }
 
-        public Task<DBServiceModel<SqlDataReader>> SqlFecthCommand(string sql)
-        {            
+        // New overload that accepts parameters
+        public async Task<ServiceModel> SqlCommand(string sql, params MySqlParameter[] parameters)
+        {
             try
             {
-                SqlConnection connection = new SqlConnection(_connectionString);
-                SqlCommand command = new SqlCommand(sql, connection);
-
-                connection.Open();
-                _dbresult.Payload = command.ExecuteReader(CommandBehavior.CloseConnection);
-
-                _dbresult.Code = 200;
-                _dbresult.Status = true;
-                _dbresult.Message = "DataFetch Completed Success";
-                
-
+                using (MySqlConnection connection = new MySqlConnection(_connectionString))
+                {
+                    using (MySqlCommand command = new MySqlCommand(sql, connection))
+                    {
+                        if (parameters != null && parameters.Length > 0)
+                        {
+                            command.Parameters.AddRange(parameters);
+                        }
+                        connection.Open();
+                        command.ExecuteNonQuery();
+                        _result.Code = 200;
+                        _result.Status = true;
+                        _result.Message = "SqlCommand() Completed Success";
+                    }
+                    connection.Close();
+                }
             }
             catch (Exception ex)
             {
-                _dbresult.Code = 500;
-                _dbresult.Status = false;
-                _dbresult.Message = "SqlFecthCommand() Exception: " + ex.Message;
+                _result.Code = 500;
+                _result.Status = false;
+                _result.Message = "SqlCommand() Exception: " + ex.Message;
             }
+            return _result;
+        }
 
-            return Task.FromResult(_dbresult);
-
-            // To use it do this, the using will open and close all connections and readers for you
-            /*
-                string selectQuery = "SELECT * FROM YourTable";
-                using (SqlDataReader reader = dataAccess.ExecuteReader(selectQuery))
+        public async Task<DBServiceModel<MySqlDataReader>> SqlFecthCommand(string sql)
+        {
+            DBServiceModel<MySqlDataReader> dbServiceModel = new DBServiceModel<MySqlDataReader>();
+            try
+            {
+                using (MySqlConnection connection = new MySqlConnection(_connectionString))
                 {
-                    while (reader.Read())
+                    using (MySqlCommand command = new MySqlCommand(sql, connection))
                     {
-                        // Process the data
-                        int id = reader.GetInt32(0); // Assuming the first column is an integer
-                        string name = reader.GetString(1); // Assuming the second column is a string
-                        // Retrieve other columns as needed
+                        connection.Open();
+                        dbServiceModel.Payload = await command.ExecuteReaderAsync(CommandBehavior.CloseConnection);
                     }
                 }
-             */
+                dbServiceModel.Code = 200;
+                dbServiceModel.Status = true;
+                dbServiceModel.Message = "DataFetch Completed Success";
+            }
+            catch (Exception ex)
+            {
+                dbServiceModel.Code = 500;
+                dbServiceModel.Status = false;
+                dbServiceModel.Message = "SqlFecthCommand() Exception: " + ex.Message;
+            }
+            return dbServiceModel;
+        }
+
+        public async Task<DBServiceModel<MySqlDataReader>> SqlFecthCommand(string sql, params MySqlParameter[] parameters)
+        {
+            DBServiceModel<MySqlDataReader> dbServiceModel = new DBServiceModel<MySqlDataReader>();
+            try
+            {
+                using (MySqlConnection connection = new MySqlConnection(_connectionString))
+                {
+                    using (MySqlCommand command = new MySqlCommand(sql, connection))
+                    {
+                        if (parameters != null && parameters.Length > 0)
+                        {
+                            command.Parameters.AddRange(parameters);
+                        }
+                        connection.Open();
+                        dbServiceModel.Payload = await command.ExecuteReaderAsync(CommandBehavior.CloseConnection);
+                    }
+                }
+                dbServiceModel.Code = 200;
+                dbServiceModel.Status = true;
+                dbServiceModel.Message = "DataFetch Completed Success";
+            }
+            catch (Exception ex)
+            {
+                dbServiceModel.Code = 500;
+                dbServiceModel.Status = false;
+                dbServiceModel.Message = "SqlFecthCommand() Exception: " + ex.Message;
+            }
+            return dbServiceModel;
+        }
+
+        public async Task<ServiceModel> CheckIfUserIdExist(string userId)
+        {
+            try
+            {
+                _sql = "SELECT * FROM users WHERE UserId = @UserId";
+                var checkRes = await SqlFecthCommand(_sql, new MySqlParameter("@UserId", userId));
+                var readerObj = checkRes.Payload;
+                if (readerObj.HasRows)
+                {
+                    _result.Code = 500;
+                    _result.Status = false;
+                    _result.Message = $"UserId '{userId}' already exists.";
+                    _result.Payload = null;
+                }
+                else
+                {
+                    _result.Code = 200;
+                    _result.Status = true;
+                    _result.Message = $"UserId '{userId}' does not exist.";
+                    _result.Payload = null;
+                }
+                readerObj.Close();
+            }
+            catch (Exception ex)
+            {
+                _result.Code = 500;
+                _result.Status = false;
+                _result.Message = "CheckIfUserIdExist() Exception: " + ex.Message;
+            }
+            return _result;
+        }
+
+        public async Task<ServiceModel> CheckIfUserNameExist(string userName)
+        {
+            try
+            {
+                _sql = "SELECT * FROM users WHERE UserName = @UserName";
+                var checkRes = await SqlFecthCommand(_sql, new MySqlParameter("@UserName", userName));
+                var readerObj = checkRes.Payload;
+                if (readerObj.HasRows)
+                {
+                    _result.Code = 500;
+                    _result.Status = false;
+                    _result.Message = $"UserName '{userName}' already exists.";
+                    _result.Payload = null;
+                }
+                else
+                {
+                    _result.Code = 200;
+                    _result.Status = true;
+                    _result.Message = $"UserName '{userName}' does not exist.";
+                    _result.Payload = null;
+                }
+                readerObj.Close();
+            }
+            catch (Exception ex)
+            {
+                _result.Code = 500;
+                _result.Status = false;
+                _result.Message = "CheckIfUserNameExist() Exception: " + ex.Message;
+            }
+            return _result;
         }
     }
 }

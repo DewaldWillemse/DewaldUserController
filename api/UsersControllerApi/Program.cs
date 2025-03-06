@@ -1,5 +1,9 @@
-
-using UserController;
+using BaseProjectApi.Services.ManualServices;
+using BaseProjectApi.Services.UserServices;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using MySql.Data.MySqlClient;
+using Microsoft.AspNetCore.Hosting;
 
 namespace BaseProjectApi
 {
@@ -14,13 +18,26 @@ namespace BaseProjectApi
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    webBuilder.UseStartup<Startup>()
-                        .UseUrls("https://uc.paytequtils.com:5116") // Force your custom domain & port
-                        .ConfigureKestrel((context, options) =>
+                    webBuilder.ConfigureServices(services =>
+                    {
+                        // Register services for dependency injection
+                        services.AddSingleton<IDBManualService, DBManualService>();
+                        services.AddSingleton<IUserDBServices, UserDBServices>();
+
+                        // MySQL connection configuration
+                        services.AddScoped<MySqlConnection>(provider => 
+                            new MySqlConnection("Server=localhost;Database=UserControllerDB;User=root;Password=yourpassword;"));
+                    });
+
+                    webBuilder.Configure(app =>
+                    {
+                        // Configure HTTP request pipeline (middleware)
+                        app.UseRouting();
+                        app.UseEndpoints(endpoints =>
                         {
-                            var kestrelSection = context.Configuration.GetSection("Kestrel");
-                            options.Configure(kestrelSection);
+                            endpoints.MapControllers();  // Map API controllers
                         });
+                    });
                 });
     }
 }
